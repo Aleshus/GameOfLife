@@ -1,20 +1,22 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform:
-- AWS::Serverless-2016-10-31
-- AWS::CodeStar
-
+  - 'AWS::Serverless-2016-10-31'
+  - 'AWS::CodeStar'
 Parameters:
   ProjectId:
     Type: String
     Description: AWS CodeStar projectID used to associate new resources to team members
   CodeDeployRole:
     Type: String
-    Description: IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda functions
+    Description: >-
+      IAM role to allow AWS CodeDeploy to manage deployment of AWS Lambda
+      functions
   Stage:
     Type: String
-    Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
+    Description: >-
+      The name for a project pipeline stage, such as Staging or Prod, for which
+      resources are provisioned and deployed.
     Default: ''
-
 Globals:
   Function:
     AutoPublishAlias: live
@@ -22,15 +24,13 @@ Globals:
       Enabled: true
       Type: Canary10Percent5Minutes
       Role: !Ref CodeDeployRole
-
 Resources:
   GetHelloWorld:
-    Type: AWS::Serverless::Function
+    Type: 'AWS::Serverless::Function'
     Properties:
       Handler: index.get
       Runtime: nodejs8.10
-      Role:
-        Fn::GetAtt:
+      Role: !GetAtt
         - LambdaExecutionRole
         - Arn
       Events:
@@ -39,18 +39,124 @@ Resources:
           Properties:
             Path: /
             Method: get
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 822e912e-ce01-484d-9e4b-26bd48b35c16
   LambdaExecutionRole:
     Description: Creating service role in IAM for AWS Lambda
-    Type: AWS::IAM::Role
+    Type: 'AWS::IAM::Role'
     Properties:
       RoleName: !Sub 'CodeStar-${ProjectId}-Execution${Stage}'
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
-          Principal:
-            Service: [lambda.amazonaws.com]
-          Action: sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
       Path: /
       ManagedPolicyArns:
-        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-      PermissionsBoundary: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/CodeStar_${ProjectId}_PermissionsBoundary'
+        - !Sub >-
+          arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      PermissionsBoundary: !Sub >-
+        arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/CodeStar_${ProjectId}_PermissionsBoundary
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: d3aa0ad3-a0f2-4987-b5ed-21d86be62ce2
+  GamesAPI:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: Games API
+      Description: API for games operations
+      FailOnWarnings: true
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 8cb74231-c755-435c-95e3-115363a3161f
+  LambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:invokeFunction'
+      FunctionName: !GetAtt
+        - GamesLambda
+        - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:execute-api:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':'
+          - !Ref GamesApi
+          - /*
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 82516eaa-84c8-417f-9c76-603edfad2cb2
+  AGA4KVZV:
+    Type: 'AWS::ApiGateway::Account'
+    Properties: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 58cb33fc-61bf-4194-b568-9fb2cc5ec3ab
+  ApiGatewayCloudWatchLogsRole:
+    Type: 'AWS::IAM::Role'
+    Properties: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 7221767a-b796-44dd-8aaf-c85f9afc6b64
+Metadata:
+  'AWS::CloudFormation::Designer':
+    d3aa0ad3-a0f2-4987-b5ed-21d86be62ce2:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 220
+        'y': 270
+      z: 1
+      embeds: []
+    822e912e-ce01-484d-9e4b-26bd48b35c16:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 150
+        'y': 100
+      z: 1
+      embeds: []
+    8cb74231-c755-435c-95e3-115363a3161f:
+      size:
+        width: 140
+        height: 140
+      position:
+        x: 540
+        'y': 120
+      z: 0
+      embeds: []
+    82516eaa-84c8-417f-9c76-603edfad2cb2:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 840
+        'y': 110
+      z: 0
+      embeds: []
+    58cb33fc-61bf-4194-b568-9fb2cc5ec3ab:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 413
+        'y': 341
+      z: 0
+      embeds: []
+    7221767a-b796-44dd-8aaf-c85f9afc6b64:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 190
+        'y': 370
+      z: 0
+      embeds: []
