@@ -92,18 +92,63 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 82516eaa-84c8-417f-9c76-603edfad2cb2
-  AGA4KVZV:
-    Type: 'AWS::ApiGateway::Account'
-    Properties: {}
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 58cb33fc-61bf-4194-b568-9fb2cc5ec3ab
   ApiGatewayCloudWatchLogsRole:
     Type: 'AWS::IAM::Role'
-    Properties: {}
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: ApiGatewayLogsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:DescribeLogGroups'
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:PutLogEvents'
+                  - 'logs:GetLogEvents'
+                  - 'logs:FilterLogEvents'
+                Resource: '*'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 7221767a-b796-44dd-8aaf-c85f9afc6b64
+  GamesApiStage:
+    Type: 'AWS::ApiGateway::Stage'
+    Properties:
+      DeploymentId:
+        Ref: ApiDeployment
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: '*'
+          LoggingLevel: INFO
+          ResourcePath: /*
+      RestApiId: !Ref GamesAPI
+      StageName: LATEST
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: b096c655-efc9-4276-9332-9164c483d98a
+    DependsOn:
+      - ApiGatewayAccount
+  ApiGatewayAccount:
+    Type: 'AWS::ApiGateway::Account'
+    Properties:
+      CloudWatchRoleArn:
+        'Fn::GetAtt':
+          - ApiGatewayCloudWatchLogsRole
+          - Arn
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 58cb33fc-61bf-4194-b568-9fb2cc5ec3ab
 Metadata:
   'AWS::CloudFormation::Designer':
     d3aa0ad3-a0f2-4987-b5ed-21d86be62ce2:
@@ -111,8 +156,8 @@ Metadata:
         width: 60
         height: 60
       position:
-        x: 220
-        'y': 270
+        x: 200
+        'y': 340
       z: 1
       embeds: []
     822e912e-ce01-484d-9e4b-26bd48b35c16:
@@ -120,26 +165,27 @@ Metadata:
         width: 60
         height: 60
       position:
-        x: 150
-        'y': 100
+        x: 200
+        'y': 210
       z: 1
       embeds: []
     8cb74231-c755-435c-95e3-115363a3161f:
       size:
-        width: 140
-        height: 140
+        width: 450
+        height: 300
       position:
-        x: 540
-        'y': 120
+        x: 370
+        'y': 10
       z: 0
-      embeds: []
+      embeds:
+        - b096c655-efc9-4276-9332-9164c483d98a
     82516eaa-84c8-417f-9c76-603edfad2cb2:
       size:
         width: 60
         height: 60
       position:
-        x: 840
-        'y': 110
+        x: 880
+        'y': 430
       z: 0
       embeds: []
     58cb33fc-61bf-4194-b568-9fb2cc5ec3ab:
@@ -147,8 +193,8 @@ Metadata:
         width: 60
         height: 60
       position:
-        x: 413
-        'y': 341
+        x: 330
+        'y': 420
       z: 0
       embeds: []
     7221767a-b796-44dd-8aaf-c85f9afc6b64:
@@ -156,7 +202,21 @@ Metadata:
         width: 60
         height: 60
       position:
-        x: 190
-        'y': 370
+        x: 200
+        'y': 420
       z: 0
       embeds: []
+    b096c655-efc9-4276-9332-9164c483d98a:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 690
+        'y': 150
+      z: 1
+      parent: 8cb74231-c755-435c-95e3-115363a3161f
+      embeds: []
+      iscontainedinside:
+        - 8cb74231-c755-435c-95e3-115363a3161f
+      dependson:
+        - 58cb33fc-61bf-4194-b568-9fb2cc5ec3ab
